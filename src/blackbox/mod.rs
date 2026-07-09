@@ -175,6 +175,29 @@ pub async fn start_blackbox(config: BlackboxConfig) -> Result<BlackboxHandle> {
         collector::system_slow_loop(&run_dir8, detail_interval, stop_flag8).await;
     }));
 
+    // PCIe throughput (nvidia-smi dmon -s t)
+    let run_dir9 = run_dir.clone();
+    let stop_flag9 = stop_flag.clone();
+    let interval = config.interval;
+    tasks.push(tokio::spawn(async move {
+        collector::pcie_throughput_loop(&run_dir9, interval, stop_flag9).await;
+    }));
+
+    // GPU topology diff
+    let run_dir10 = run_dir.clone();
+    let stop_flag10 = stop_flag.clone();
+    let tx10 = tx.clone();
+    tasks.push(tokio::spawn(async move {
+        collector::gpu_topo_loop(&run_dir10, detail_interval, stop_flag10, tx10).await;
+    }));
+
+    // PCIe AER counters
+    let run_dir11 = run_dir.clone();
+    let stop_flag11 = stop_flag.clone();
+    tasks.push(tokio::spawn(async move {
+        collector::pcie_aer_loop(&run_dir11, detail_interval, stop_flag11).await;
+    }));
+
     // baseline snapshot
     let _ = snapshot::collect_baseline(&run_dir).await;
 

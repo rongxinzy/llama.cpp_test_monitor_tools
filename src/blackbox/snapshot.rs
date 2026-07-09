@@ -72,8 +72,15 @@ pub async fn collect_baseline(run_dir: &Path) {
         "bash",
         &[
             "-lc",
-            "date --iso-8601=ns 2>/dev/null || date; echo '--- nvidia-smi ---'; nvidia-smi 2>/dev/null || true; echo '--- nvidia-smi -q ---'; nvidia-smi -q 2>/dev/null || true; echo '--- nvidia-smi topo -m ---'; nvidia-smi topo -m 2>/dev/null || true",
+            "date --iso-8601=ns 2>/dev/null || date; echo '--- nvidia-smi ---'; nvidia-smi 2>/dev/null || true; echo '--- nvidia-smi -q ---'; nvidia-smi -q 2>/dev/null || true",
         ],
+    )
+    .await;
+
+    run_to_file(
+        &snap.join("topo_baseline.txt"),
+        "nvidia-smi",
+        &["topo", "-m"],
     )
     .await;
 
@@ -82,7 +89,7 @@ pub async fn collect_baseline(run_dir: &Path) {
         "bash",
         &[
             "-lc",
-            "lspci -nn 2>/dev/null || true; echo; lspci -tv 2>/dev/null || true",
+            "lspci -nn 2>/dev/null || true; echo; lspci -tv 2>/dev/null || true; echo; echo '--- lspci -vv NVIDIA ---'; lspci -vv -d 10de: 2>/dev/null || true",
         ],
     )
     .await;
@@ -147,6 +154,14 @@ pub async fn capture_incident(
         let args: Vec<&str> = cmd.iter().map(|s| *s).collect();
         append_cmd_output(&mut snap, label, "nvidia-smi", &args).await;
     }
+
+    append_cmd_output(
+        &mut snap,
+        "lspci -vv NVIDIA",
+        "bash",
+        &["-lc", "lspci -vv -d 10de: 2>/dev/null || true"],
+    )
+    .await;
 
     let mut kernel = OpenOptions::new()
         .create(true)
