@@ -36,6 +36,7 @@ async fn append_log(path: &Path, text: String) {
         Err(_) => return,
     };
     let _ = file.write_all(text.as_bytes()).await;
+    let _ = file.flush().await;
 }
 
 pub async fn gpu_metrics_loop(

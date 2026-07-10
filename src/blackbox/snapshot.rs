@@ -31,9 +31,11 @@ async fn run_to_file(path: &Path, program: &str, args: &[&str]) {
                 let _ = file.write_all(b"\n--- stderr ---\n").await;
                 let _ = file.write_all(&o.stderr).await;
             }
+            let _ = file.flush().await;
         }
         Err(e) => {
             let _ = file.write_all(format!("failed: {}", e).as_bytes()).await;
+            let _ = file.flush().await;
         }
     }
 }
@@ -49,9 +51,11 @@ async fn append_cmd_output(file: &mut fs::File, label: &str, program: &str, args
                 let _ = file.write_all(b"\n--- stderr ---\n").await;
                 let _ = file.write_all(&o.stderr).await;
             }
+            let _ = file.flush().await;
         }
         Err(e) => {
             let _ = file.write_all(format!("failed: {}\n", e).as_bytes()).await;
+            let _ = file.flush().await;
         }
     }
 }
@@ -119,6 +123,7 @@ pub async fn capture_incident(
             .as_bytes(),
         )
         .await?;
+    let _ = reason.flush().await;
 
     // tail current logs/metrics into incident dir
     for pattern in [
@@ -211,6 +216,7 @@ pub async fn capture_incident(
             .as_bytes(),
         )
         .await?;
+    let _ = summary.flush().await;
 
     log(
         &run_dir.join("blackbox.log"),
@@ -247,5 +253,6 @@ async fn tail_file(src: &Path, dst: &Path, n: usize) -> Result<(), std::io::Erro
         .open(dst)
         .await?;
     file.write_all(tail.join("\n").as_bytes()).await?;
+    let _ = file.flush().await;
     Ok(())
 }

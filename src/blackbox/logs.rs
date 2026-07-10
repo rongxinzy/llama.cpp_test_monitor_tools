@@ -58,6 +58,7 @@ async fn follow_command(
                         let ts = chrono::Local::now().format("%Y-%m-%dT%H:%M:%S%.3f%z");
                         let out = format!("{} {}\n", ts, line);
                         let _ = tokio::io::AsyncWriteExt::write_all(&mut file, out.as_bytes()).await;
+                        let _ = tokio::io::AsyncWriteExt::flush(&mut file).await;
                         if looks_like_trigger(&line, &trigger_re) {
                             let _ = tx.send(TriggerEvent {
                                 source: name.to_string(),

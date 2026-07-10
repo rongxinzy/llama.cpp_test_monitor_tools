@@ -225,6 +225,7 @@ pub async fn log(path: &Path, message: &str) {
         Err(_) => return,
     };
     let _ = file.write_all(line.as_bytes()).await;
+    let _ = file.flush().await;
 }
 
 pub async fn finalize_blackbox(handle: BlackboxHandle) {
