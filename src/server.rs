@@ -88,12 +88,15 @@ pub async fn start_server(
         .args(&cmd[1..])
         .stdout(Stdio::from(log_file.try_clone()?))
         .stderr(Stdio::from(log_file))
-        .kill_on_drop(false);
+        .kill_on_drop(true);
     unsafe {
         command.pre_exec(|| {
             // Put llama-server into its own process group so killpg
             // only targets the server subtree, not the parent tool.
             libc::setpgid(0, 0);
+            // If the parent tool dies unexpectedly, make sure llama-server
+            // is terminated instead of becoming an orphan process.
+            libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGTERM);
             Ok(())
         });
     }
